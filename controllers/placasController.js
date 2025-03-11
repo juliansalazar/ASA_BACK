@@ -69,5 +69,5 @@ module.exports = {
     getPlacas,
     crearPlacas,
     updatePlacas,
-    deletePlacas
+    deletePlacas,
 }

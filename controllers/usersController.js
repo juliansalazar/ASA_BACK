@@ -16,10 +16,10 @@ const transporter = nodemailer.createTransport({
 
 // Función de registro
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { name, email, password, identificacion } = req.body;
+  if (!name || !email || !password || !identificacion) {
     res.status(400);
-    throw new Error('Please provide name, email and password');
+    throw new Error('Please provide name, email, password and identification');
   }
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -32,12 +32,14 @@ const register = asyncHandler(async (req, res) => {
     name,
     email,
     password: hashedPassword,
+    identificacion,
   });
   if (user) {
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
+      identificacion: user.identificacion,
       token: generarToken(user._id),
     });
   } else {
@@ -58,13 +60,15 @@ const login = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
-      });
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    });    
       res.status(200).json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        identificacion: user.identificacion,
         token,
+        isAdmin: user.isAdmin,
       });
     } else {
       res.status(401);

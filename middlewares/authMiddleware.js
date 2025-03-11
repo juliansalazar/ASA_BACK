@@ -55,4 +55,18 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { protect };
+// Función para generar y enviar el token en una cookie
+const generateTokenAndSendCookie = (user, res) => {
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: '3d', // Puedes ajustar la expiración
+  });
+
+  // Configuración de la cookie con seguridad
+  res.cookie('jwt', token, {
+    httpOnly: true, // Impide el acceso al token desde JavaScript del lado del cliente
+    secure: process.env.NODE_ENV === 'production', // Solo en producción si usas HTTPS
+    sameSite: 'Strict', // Restringe el envío de cookies entre dominios
+  });
+};
+
+module.exports = { protect, generateTokenAndSendCookie, };
