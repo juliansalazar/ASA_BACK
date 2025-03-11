@@ -16,7 +16,7 @@ const calculatePoints = async (req, res) => {
     const tipoIdentificacion = user.identificacion.length === 13 ? 'ruc' : 'cedula';
     const clientResponse = await axios.get(
       `https://api.contifico.com/sistema/api/v1/persona/?${tipoIdentificacion}=${user.identificacion}`,
-      { headers: { Authorization: apiKey } }
+      { headers: { Authorization: `Bearer ${apiKey}` } }
     );
 
     const clientId = clientResponse.data[0]?.id;
@@ -26,7 +26,7 @@ const calculatePoints = async (req, res) => {
 
     const invoicesResponse = await axios.get(
       `https://api.contifico.com/sistema/api/v1/documento/?persona_id=${clientId}&tipo_documento=FAC`,
-      { headers: { Authorization: apiKey } }
+      { headers: { Authorization: `Bearer ${apiKey}` } }
     );
 
     const invoices = invoicesResponse.data;
