@@ -27,6 +27,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/placas', require('./routes/placasRoutes.js'));
 app.use('/api/users', require('./routes/usersRoutes.js'));
 app.use('/api/products', require('./routes/productsRoutes.js'));
+app.use('/api/loyalty', require('./routes/loyaltyRoutes.js'));
+
 
 // Middleware de manejo de errores
 app.use(errorHandler);
