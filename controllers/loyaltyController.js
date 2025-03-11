@@ -1,5 +1,5 @@
-const LoyaltyPoints = require('../models/loyaltyPoints');
-const User = require('../models/user');
+const LoyaltyPoints = require('../models/loyaltyPoints.js');
+const User = require('../models/userModel.js');
 const axios = require('axios');
 
 const apiKey = process.env.CONTIFICO_API_KEY || 'PJF858JmAbTrOBu8quv0IPaRPAQX5nbns9fsJxni4TI';
