@@ -61,6 +61,15 @@ const generateTokenAndSendCookie = (user, res) => {
     expiresIn: '3d', // Puedes ajustar la expiración
   });
 
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    identificacion: user.identificacion,
+    isAdmin: user.isAdmin,
+    token,
+  })
+
   // Configuración de la cookie con seguridad
   res.cookie('jwt', token, {
     httpOnly: true, // Impide el acceso al token desde JavaScript del lado del cliente
