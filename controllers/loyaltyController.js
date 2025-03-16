@@ -1,63 +1,81 @@
-const LoyaltyPoints = require('../models/loyaltyPoints.js');
-const User = require('../models/userModel.js');
 const axios = require('axios');
+const Cliente = require('../models/loyaltyModel'); // Modelo de Cliente
+const Transaccion = require('../models/loyaltyModel'); // Modelo de Transacción
 
-const apiKey = process.env.CONTIFICO_API_KEY || 'PJF858JmAbTrOBu8quv0IPaRPAQX5nbns9fsJxni4TI';
+// URL base de la API de Contifico (ajústala según la documentación oficial)
+const CONTIFICO_API_URL = 'https://api.contifico.com/sistema/api/v1/registro/documento/';
 
-const calculatePoints = async (req, res) => {
-  const { userId } = req.body;
-
+// Función para obtener facturas de Contifico
+const getFacturas = async () => {
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    const tipoIdentificacion = user.identificacion.length === 13 ? 'ruc' : 'cedula';
-    const clientResponse = await axios.get(
-      `https://api.contifico.com/sistema/api/v1/persona/?${tipoIdentificacion}=${user.identificacion}`,
-      { headers: { Authorization: `Bearer ${apiKey}` } }
-    );
-
-    const clientId = clientResponse.data[0]?.id;
-    if (!clientId) {
-      return res.status(404).json({ message: 'Cliente no encontrado en Contifico' });
-    }
-
-    const invoicesResponse = await axios.get(
-      `https://api.contifico.com/sistema/api/v1/documento/?persona_id=${clientId}&tipo_documento=FAC`,
-      { headers: { Authorization: `Bearer ${apiKey}` } }
-    );
-
-    const invoices = invoicesResponse.data;
-
-    // Procesar cada factura y guardar puntos
-    for (const invoice of invoices) {
-      const existingPoints = await LoyaltyPoints.findOne({ invoiceId: invoice.id });
-      if (!existingPoints && invoice.estado === 'C') { // Solo facturas canceladas (pagadas)
-        const points = parseFloat(invoice.total); // 1 punto por cada dólar (ajustable)
-        await LoyaltyPoints.create({
-          userId: user._id,
-          invoiceId: invoice.id,
-          invoiceTotal: invoice.total,
-          points,
-        });
-      }
-    }
-
-    // Calcular el total de puntos acumulados
-    const totalPoints = await LoyaltyPoints.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: null, total: { $sum: '$points' } } },
-    ]);
-
-    res.status(200).json({
-      message: 'Puntos calculados exitosamente',
-      totalPoints: totalPoints[0]?.total || 0,
+    const response = await axios.get(CONTIFICO_API_URL, {
+      headers: {
+        Authorization: `Bearer ${process.env.CONTIFICO_API_TOKEN}`, // Token desde .env
+      },
     });
+    return response.data; // Devuelve las facturas
   } catch (error) {
-    res.status(500).json({ message: 'Error al calcular puntos', error: error.message });
+    console.error('Error al obtener facturas de Contifico:', error.message);
+    throw new Error('No se pudieron obtener las facturas');
   }
 };
 
-module.exports = { calculatePoints };
+// Función para procesar facturas y asignar puntos
+const procesarFacturas = async () => {
+  try {
+    const facturas = await getFacturas();
+
+    for (const factura of facturas) {
+      // Buscar o crear cliente en la base de datos
+      let cliente = await Cliente.findOne({ contificoId: factura.cliente_id });
+      if (!cliente) {
+        cliente = await Cliente.create({
+          contificoId: factura.cliente_id,
+          nombre: factura.cliente_nombre || 'Cliente sin nombre', // Ajusta según respuesta de API
+        });
+      }
+
+      // Calcular puntos (ejemplo: 1 punto por cada $10)
+      const puntos = Math.floor(factura.total / 10);
+
+      // Actualizar puntos del cliente
+      await Cliente.updateOne(
+        { contificoId: factura.cliente_id },
+        { $inc: { puntos } } // Incrementa los puntos
+      );
+
+      // Registrar la transacción
+      await Transaccion.create({
+        clienteId: cliente._id,
+        facturaId: factura.id,
+        monto: factura.total,
+        puntosOtorgados: puntos,
+      });
+    }
+    return { message: 'Facturas procesadas y puntos asignados correctamente' };
+  } catch (error) {
+    console.error('Error al procesar facturas:', error.message);
+    throw new Error('Error al procesar las facturas');
+  }
+};
+
+// Función para obtener los puntos de un cliente específico
+const getPuntosCliente = async (contificoId) => {
+  try {
+    const cliente = await Cliente.findOne({ contificoId });
+    if (!cliente) {
+      return { puntos: 0, message: 'Cliente no encontrado' };
+    }
+    return { puntos: cliente.puntos };
+  } catch (error) {
+    console.error('Error al obtener puntos:', error.message);
+    throw new Error('No se pudieron obtener los puntos del cliente');
+  }
+};
+
+// Exportar las funciones para usarlas en las rutas
+module.exports = {
+  getFacturas,
+  procesarFacturas,
+  getPuntosCliente,
+};
