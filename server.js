@@ -13,7 +13,7 @@ const app = express();
 
 // Configuración de CORS
 const corsOptions = {
-  origin: 'https://autocarest.com' || 'https://asa-back-zs74.onrender.com', //  'http://localhost:5173' ||
+  origin: 'https://autocarest.onrender.com' || 'https://autocarest.com' || 'https://asa-back-zs74.onrender.com', //  'http://localhost:5173' ||
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true, // Habilita el envío de cookies y credenciales
   allowedHeaders: ['Content-Type', 'Authorization'],
