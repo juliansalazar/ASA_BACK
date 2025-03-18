@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.get('/client-id', async (req, res) => {
   const { identificacion, tipo } = req.query;
-  const apiKey = process.env.CONTIFICO_API_TOKEN;
+  const apiKey = process.env.CONTIFICO_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'Clave API no definida' });
