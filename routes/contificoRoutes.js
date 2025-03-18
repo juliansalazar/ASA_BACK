@@ -41,7 +41,8 @@ router.get('/client-id', async (req, res) => {
 router.get('/invoices', async (req, res) => {
   const { persona_id, startDate, endDate } = req.query;
   const apiKey = process.env.CONTIFICO_API_KEY;
-
+  console.log('apiKey: ' + apiKey);
+  
   if (!apiKey) {
     return res.status(500).json({ error: 'Clave API no definida' });
   }
