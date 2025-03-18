@@ -28,6 +28,7 @@ app.use('/api/placas', require('./routes/placasRoutes.js'));
 app.use('/api/users', require('./routes/usersRoutes.js'));
 app.use('/api/products', require('./routes/productsRoutes.js'));
 app.use('/api/loyalty', require('./routes/loyaltyRoutes.js'));
+app.use('/api/contifico', require('./routes/contificoRoutes.js'));
 
 
 // Middleware de manejo de errores
